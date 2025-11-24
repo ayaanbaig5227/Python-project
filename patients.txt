@@ -1,0 +1,10 @@
+[
+  {
+    "patient_id": "P1",
+    "name": "qwerty wer",
+    "age": 23,
+    "gender": "male",
+    "phone": "3148092343",
+    "notes": "hello"
+  }
+]
