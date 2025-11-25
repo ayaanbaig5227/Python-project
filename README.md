@@ -1,21 +1,21 @@
 Hospital Management System
 
-Team Name: Apathon
-Author: Mirza Ayaan Baig
-        Ashank Kotain
-        Abhijay Jindal
-Project Title: Hospital Management System
+Team Name: Apathon   
+Author: Mirza Ayaan Baig  
+        Ashank Kotain   
+        Abhijay Jindal  
+Project Title: Hospital Management System  
 
-Description
+Description  
 
-A simple console-based hospital management system using Python and OOP.
-Data is stored in .txt files using JSON format.
-Supports patients, doctors, appointments, and medical records.
+A simple console-based hospital management system using Python and OOP.  
+Data is stored in .txt files using JSON format.  
+Supports patients, doctors, appointments, and medical records.  
 
-Concepts Used
+Concepts Used  
 
-OOP (classes, objects)
-File handling  
+OOP (classes, objects)  
+File handling   
 JSON data storage  
 Modular code  
 Basic CLI menus  
