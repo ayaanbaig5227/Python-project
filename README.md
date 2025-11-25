@@ -1,9 +1,8 @@
 Hospital Management System
 
 Team Name: Apathon
-
 Author: Mirza Ayaan Baig
-        Ashank Kotian
+        Ashank Kotain
         Abhijay Jindal
 Project Title: Hospital Management System
 
@@ -16,60 +15,42 @@ Supports patients, doctors, appointments, and medical records.
 Concepts Used
 
 OOP (classes, objects)
-
 File handling
-
 JSON data storage
-
 Modular code
-
 Basic CLI menus
-
 Libraries
-
 json
-
 os
-
 datetime
-
 typing (optional)
 
+
 Main Components
-Models
 
+Models-
 Classes for Patient, Doctor, Appointment, and MedicalRecord.
-Each has to_dict() for saving data.
+Each has a to_dict() method for saving data.
 
-FileStorage
+FileStorage-
+Handles reading and writing lists of records to .txt files.
 
-Handles reading/writing lists of records to .txt files.
+HospitalSystem-
+Core logic for add/list/search/delete features, appointment handling, and medical record management.
 
-HospitalSystem
+CLI Menu-
+Provides simple number-based options to navigate the system.
 
-Core logic: add/list/search/delete for all modules + appointment and record management.
-
-CLI Menu
-
-Runs the system with simple numbered options.
-
-Example
-
+Example-
 Adding a patient stores a record like:
-
 {"patient_id": "P001", "name": "Ali", "age": 21}
 
-Setup
-
+Setup-
 Install Python 3
-
-Ensure files exist (or will be auto-created):
+Make sure these files exist (or they will be created automatically):
 patients.txt, doctors.txt, appointments.txt, records.txt
 
-Run:
-
+Run the program-
 python hospital_system.py
 
-
-If you want an ultra-minimal one-paragraph README, I can generate that too.
 
