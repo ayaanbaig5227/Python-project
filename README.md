@@ -1,6 +1,7 @@
 Hospital Management System
 
-Team Name: Byte Builders
+Team Name: Apathon
+
 Author: Mirza Ayaan Baig
         Ashank Kotian
         Abhijay Jindal
@@ -71,3 +72,4 @@ python hospital_system.py
 
 
 If you want an ultra-minimal one-paragraph README, I can generate that too.
+
