@@ -20,7 +20,6 @@ class Patient:
         self.notes = notes
 
     def get_dict(self):
-        # convert to dictionary for saving
         return {
             "id": self.id,
             "name": self.name,
@@ -68,7 +67,7 @@ class ManagementSystem:
         self.patients = []
         self.doctors = []
         self.appts = []
-        self.load() # load data on startup
+        self.load() 
 
     def load(self):
         # Loading patients
@@ -78,8 +77,6 @@ class ManagementSystem:
                 with open(p_file, "r") as f:
                     data = json.load(f)
                     for d in data:
-                        # self.patients.append(Patient(d['id'], d['name'], d['age'], d['gender'], d['phone'], d['notes']))
-                        # simplified loading
                         obj = Patient(d['id'], d['name'], d['age'], d['gender'], d['phone'], d.get('notes', ''))
                         self.patients.append(obj)
             except:
@@ -95,7 +92,7 @@ class ManagementSystem:
                         doc = Doctor(item['id'], item['name'], item['spec'], item['phone'])
                         self.doctors.append(doc)
             except:
-                pass # ignore error if file empty
+                pass 
 
         # Loading appointments
         a_file = DATA_DIR + "/appts.json"
@@ -130,22 +127,43 @@ class ManagementSystem:
         with open(DATA_DIR + "/appts.json", "w") as f:
             json.dump(temp_a, f, indent=4)
 
-    # helpers
+    # --- UPDATED ID GENERATION ---
     def get_new_id(self, type):
+        # Determine the list and the prefix based on type
+        data_list = []
+        prefix = ""
+        
         if type == "P":
-            return "P" + str(len(self.patients) + 1)
+            data_list = self.patients
+            prefix = "P"
         elif type == "D":
-            return "D" + str(len(self.doctors) + 1)
+            data_list = self.doctors
+            prefix = "D"
         elif type == "A":
-            return "A" + str(len(self.appts) + 1)
-        return "UNKNOWN"
+            data_list = self.appts
+            prefix = "A"
+        else:
+            return "UNKNOWN"
+
+        # Find the highest existing number in the IDs
+        max_id = 0
+        for item in data_list:
+            try:
+                # id is like "A1", "A12". We slice [1:] to get the number.
+                num_part = int(item.id[1:])
+                if num_part > max_id:
+                    max_id = num_part
+            except:
+                pass # skip if ID format is weird
+        
+        # Return next number
+        return prefix + str(max_id + 1)
 
     def add_pat(self):
         print("--- New Patient ---")
         n = input("Name: ")
         a = input("Age: ")
-        # check if age is int
-        if not a.isdigit():
+        if not a.isdigit():#checking if input in int
             print("Invalid age")
             return
         g = input("Gender: ")
@@ -170,8 +188,8 @@ class ManagementSystem:
         print("Doctor Saved: " + did)
 
     def schedule(self):
+        print("--- Book Appointment ---")
         pid = input("Patient ID: ")
-        # verify patient
         found_p = False
         for p in self.patients:
             if p.id == pid:
@@ -183,7 +201,6 @@ class ManagementSystem:
             return
 
         did = input("Doctor ID: ")
-        # verify doc
         found_d = False
         for d in self.doctors:
             if d.id == did:
@@ -195,12 +212,10 @@ class ManagementSystem:
             return
 
         t = input("Time (YYYY-MM-DD HH:MM): ")
-        # simple validation
         if len(t) < 10:
             print("Invalid date format")
             return
         
-        # Check overlap
         for a in self.appts:
             if a.did == did and a.time == t:
                 print("Doctor is busy then.")
@@ -211,6 +226,23 @@ class ManagementSystem:
         self.appts.append(Appt(aid, pid, did, t, reason))
         self.save()
         print("Booked.")
+
+    def cancel_appt(self):
+        print("--- Cancel Appointment ---")
+        aid = input("Appointment ID (e.g. A1): ")
+        
+        found = False
+        for a in self.appts:
+            if a.id == aid:
+                self.appts.remove(a)
+                found = True
+                break
+        
+        if found:
+            self.save()
+            print("Appointment Cancelled.")
+        else:
+            print("Appointment ID not found.")
 
     def show_all(self):
         print("\n--- DATA DUMP ---")
@@ -224,15 +256,16 @@ class ManagementSystem:
             
         print(f"\nAppointments: {len(self.appts)}")
         for a in self.appts:
-            print(f"{a.time}: {a.pid} with {a.did}")
+            print(f"[{a.id}] {a.time}: {a.pid} with {a.did}")
 
     def run(self):
         while True:
             print("\n1. Add Patient")
             print("2. Add Doctor")
             print("3. Book Appt")
-            print("4. Show Data")
-            print("5. Exit")
+            print("4. Cancel Appt")
+            print("5. Show Data")
+            print("6. Exit")
             
             sel = input("Select: ")
             
@@ -243,8 +276,10 @@ class ManagementSystem:
             elif sel == "3":
                 self.schedule()
             elif sel == "4":
-                self.show_all()
+                self.cancel_appt()
             elif sel == "5":
+                self.show_all()
+            elif sel == "6":
                 break
             else:
                 print("Wrong input")
