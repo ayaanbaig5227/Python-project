@@ -1,241 +1,255 @@
-import json
-import os
+import json, os
+from datetime import datetime
 
-# 1. Simple Classes without complex static methods
+# data folder
+DATA_DIR = "hospital_db"
+
+# helper to check folder
+if not os.path.exists(DATA_DIR):
+    os.mkdir(DATA_DIR)
+
+# --- Classes ---
+
 class Patient:
-    def __init__(self, id, name, age, gender, phone, notes=""):
+    def __init__(self, id, name, age, gender, ph, notes=""):
         self.id = id
         self.name = name
         self.age = age
         self.gender = gender
-        self.phone = phone
+        self.phone = ph
         self.notes = notes
 
+    def get_dict(self):
+        # convert to dictionary for saving
+        return {
+            "id": self.id,
+            "name": self.name,
+            "age": self.age,
+            "gender": self.gender,
+            "phone": self.phone,
+            "notes": self.notes
+        }
+
 class Doctor:
-    def __init__(self, id, name, speciality, phone):
+    def __init__(self, id, name, spec, ph):
         self.id = id
         self.name = name
-        self.speciality = speciality
-        self.phone = phone
+        self.spec = spec
+        self.phone = ph
+    
+    def get_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "spec": self.spec,
+            "phone": self.phone
+        }
 
-class Appointment:
-    def __init__(self, id, patient_id, doctor_id, date_time, reason=""):
+class Appt:
+    def __init__(self, id, pid, did, time, reason):
         self.id = id
-        self.patient_id = patient_id
-        self.doctor_id = doctor_id
-        self.date_time = date_time
+        self.pid = pid
+        self.did = did
+        self.time = time
         self.reason = reason
 
-# 2. Main System Class handles logic AND file saving directly
-class HospitalManager:
+    def get_dict(self):
+        return {
+            "id": self.id,
+            "pid": self.pid,
+            "did": self.did,
+            "time": self.time,
+            "reason": self.reason
+        }
+
+# Main Logic
+class ManagementSystem:
     def __init__(self):
-        # We store data in lists instead of dictionaries (easier to loop through for students)
         self.patients = []
         self.doctors = []
-        self.appointments = []
-        
-        # Hardcoded folder name
-        self.data_folder = "hospital_data"
-        if not os.path.exists(self.data_folder):
-            os.makedirs(self.data_folder)
-            
-        self.load_data()
+        self.appts = []
+        self.load() # load data on startup
 
-    # --- File Handling (Directly inside the class) ---
-    def load_data(self):
-        # Load Patients
-        if os.path.exists(f"{self.data_folder}/patients.json"):
-            with open(f"{self.data_folder}/patients.json", "r") as f:
-                data = json.load(f)
-                for p in data:
-                    new_patient = Patient(p['id'], p['name'], p['age'], p['gender'], p['phone'], p['notes'])
-                    self.patients.append(new_patient)
+    def load(self):
+        # Loading patients
+        p_file = DATA_DIR + "/patients.json"
+        if os.path.exists(p_file):
+            try:
+                with open(p_file, "r") as f:
+                    data = json.load(f)
+                    for d in data:
+                        # self.patients.append(Patient(d['id'], d['name'], d['age'], d['gender'], d['phone'], d['notes']))
+                        # simplified loading
+                        obj = Patient(d['id'], d['name'], d['age'], d['gender'], d['phone'], d.get('notes', ''))
+                        self.patients.append(obj)
+            except:
+                print("Error loading patients")
 
-        # Load Doctors
-        if os.path.exists(f"{self.data_folder}/doctors.json"):
-            with open(f"{self.data_folder}/doctors.json", "r") as f:
-                data = json.load(f)
-                for d in data:
-                    new_doc = Doctor(d['id'], d['name'], d['speciality'], d['phone'])
-                    self.doctors.append(new_doc)
+        # Loading doctors
+        d_file = DATA_DIR + "/doctors.json"
+        if os.path.exists(d_file):
+            try:
+                with open(d_file, "r") as f:
+                    data = json.load(f)
+                    for item in data:
+                        doc = Doctor(item['id'], item['name'], item['spec'], item['phone'])
+                        self.doctors.append(doc)
+            except:
+                pass # ignore error if file empty
 
-        # Load Appointments
-        if os.path.exists(f"{self.data_folder}/appointments.json"):
-            with open(f"{self.data_folder}/appointments.json", "r") as f:
-                data = json.load(f)
-                for a in data:
-                    new_appt = Appointment(a['id'], a['patient_id'], a['doctor_id'], a['date_time'], a['reason'])
-                    self.appointments.append(new_appt)
+        # Loading appointments
+        a_file = DATA_DIR + "/appts.json"
+        if os.path.exists(a_file):
+            try:
+                with open(a_file, "r") as f:
+                    raw = json.load(f)
+                    for r in raw:
+                        self.appts.append(Appt(r['id'], r['pid'], r['did'], r['time'], r['reason']))
+            except:
+                pass
 
-    def save_data(self):
-        # Convert objects to dictionaries manually
-        p_data = [vars(p) for p in self.patients]
-        d_data = [vars(d) for d in self.doctors]
-        a_data = [vars(a) for a in self.appointments]
-
-        with open(f"{self.data_folder}/patients.json", "w") as f:
-            json.dump(p_data, f, indent=4)
-        with open(f"{self.data_folder}/doctors.json", "w") as f:
-            json.dump(d_data, f, indent=4)
-        with open(f"{self.data_folder}/appointments.json", "w") as f:
-            json.dump(a_data, f, indent=4)
-
-    # --- Helpers ---
-    def generate_id(self, prefix, current_list):
-        # A simple way to generate IDs based on list length
-        return f"{prefix}{len(current_list) + 1}"
-
-    # --- Features ---
-    def add_patient(self):
-        print("\n--- Add Patient ---")
-        name = input("Enter Name: ")
-        age = input("Enter Age: ")
-        gender = input("Enter Gender: ")
-        phone = input("Enter Phone: ")
-        notes = input("Notes (optional): ")
-        
-        pid = self.generate_id("P", self.patients)
-        new_patient = Patient(pid, name, age, gender, phone, notes)
-        self.patients.append(new_patient)
-        self.save_data()
-        print(f"Patient added successfully! ID: {pid}")
-
-    def view_patients(self):
-        print("\n--- All Patients ---")
-        if not self.patients:
-            print("No patients found.")
-        else:
-            for p in self.patients:
-                print(f"ID: {p.id} | Name: {p.name} | Age: {p.age} | Phone: {p.phone}")
-
-    def search_patient(self):
-        name = input("Enter name to search: ").lower()
-        found = False
+    def save(self):
+        # save patients
+        temp_p = []
         for p in self.patients:
-            if name in p.name.lower():
-                print(f"Found: ID: {p.id} | Name: {p.name}")
-                found = True
-        if not found:
-            print("No matching patients found.")
-
-    def delete_patient(self):
-        pid = input("Enter Patient ID to delete: ")
-        # Using a standard loop to find and remove
-        for i, p in enumerate(self.patients):
-            if p.id == pid:
-                del self.patients[i]
-                self.save_data()
-                print("Patient deleted.")
-                return
-        print("Patient ID not found.")
-
-    def add_doctor(self):
-        print("\n--- Add Doctor ---")
-        name = input("Enter Name: ")
-        spec = input("Speciality: ")
-        phone = input("Phone: ")
+            temp_p.append(p.get_dict())
         
-        did = self.generate_id("D", self.doctors)
-        doctor = Doctor(did, name, spec, phone)
-        self.doctors.append(doctor)
-        self.save_data()
-        print(f"Doctor added! ID: {did}")
+        with open(DATA_DIR + "/patients.json", "w") as f:
+            json.dump(temp_p, f, indent=4)
 
-    def view_doctors(self):
-        print("\n--- All Doctors ---")
+        # save doctors
+        temp_d = []
         for d in self.doctors:
-            print(f"ID: {d.id} | Dr. {d.name} ({d.speciality})")
+            temp_d.append(d.get_dict())
+            
+        with open(DATA_DIR + "/doctors.json", "w") as f:
+            json.dump(temp_d, f, indent=4)
 
-    def schedule_appointment(self):
-        pid = input("Enter Patient ID: ")
-        did = input("Enter Doctor ID: ")
+        # save appointments
+        temp_a = [x.get_dict() for x in self.appts]
+        with open(DATA_DIR + "/appts.json", "w") as f:
+            json.dump(temp_a, f, indent=4)
+
+    # helpers
+    def get_new_id(self, type):
+        if type == "P":
+            return "P" + str(len(self.patients) + 1)
+        elif type == "D":
+            return "D" + str(len(self.doctors) + 1)
+        elif type == "A":
+            return "A" + str(len(self.appts) + 1)
+        return "UNKNOWN"
+
+    def add_pat(self):
+        print("--- New Patient ---")
+        n = input("Name: ")
+        a = input("Age: ")
+        # check if age is int
+        if not a.isdigit():
+            print("Invalid age")
+            return
+        g = input("Gender: ")
+        ph = input("Phone: ")
+        note = input("Notes: ")
         
-        # Validation using flags
-        p_exists = False
+        pid = self.get_new_id("P")
+        new_p = Patient(pid, n, int(a), g, ph, note)
+        self.patients.append(new_p)
+        self.save()
+        print("Patient Saved: " + pid)
+
+    def add_doc(self):
+        print("--- New Doctor ---")
+        n = input("Name: ")
+        s = input("Speciality: ")
+        ph = input("Phone: ")
+        
+        did = self.get_new_id("D")
+        self.doctors.append(Doctor(did, n, s, ph))
+        self.save()
+        print("Doctor Saved: " + did)
+
+    def schedule(self):
+        pid = input("Patient ID: ")
+        # verify patient
+        found_p = False
         for p in self.patients:
             if p.id == pid:
-                p_exists = True
+                found_p = True
+                break
         
-        d_exists = False
+        if not found_p:
+            print("Patient not found!")
+            return
+
+        did = input("Doctor ID: ")
+        # verify doc
+        found_d = False
         for d in self.doctors:
             if d.id == did:
-                d_exists = True
-                
-        if not p_exists:
-            print("Error: Patient ID invalid.")
-            return
-        if not d_exists:
-            print("Error: Doctor ID invalid.")
-            return
-
-        # Simple string for date, no datetime complexity
-        date_time = input("Enter Date/Time (e.g., 2023-10-20 10:00 AM): ")
-        reason = input("Reason: ")
-
-        aid = self.generate_id("A", self.appointments)
-        appt = Appointment(aid, pid, did, date_time, reason)
-        self.appointments.append(appt)
-        self.save_data()
-        print(f"Appointment Scheduled! ID: {aid}")
-
-    def view_appointments(self):
-        print("\n--- Appointments ---")
-        if not self.appointments:
-            print("No appointments.")
-        for a in self.appointments:
-            # Simple lookup without complex helper methods
-            p_name = "Unknown"
-            d_name = "Unknown"
-            
-            for p in self.patients:
-                if p.id == a.patient_id:
-                    p_name = p.name
-            for d in self.doctors:
-                if d.id == a.doctor_id:
-                    d_name = d.name
-            
-            print(f"[{a.id}] {a.date_time} | Patient: {p_name} | Dr. {d_name} | Reason: {a.reason}")
-
-
-# Main Menu Loop
-def main():
-    system = HospitalManager()
-    
-    while True:
-        print("\n=== Hospital System ===")
-        print("1. Add Patient")
-        print("2. View Patients")
-        print("3. Search Patient")
-        print("4. Add Doctor")
-        print("5. View Doctors")
-        print("6. Schedule Appointment")
-        print("7. View Appointments")
-        print("8. Delete Patient")
-        print("0. Exit")
+                found_d = True
+                break
         
-        choice = input("Select option: ")
+        if not found_d:
+            print("Doctor not found!")
+            return
 
-        if choice == '1':
-            system.add_patient()
-        elif choice == '2':
-            system.view_patients()
-        elif choice == '3':
-            system.search_patient()
-        elif choice == '4':
-            system.add_doctor()
-        elif choice == '5':
-            system.view_doctors()
-        elif choice == '6':
-            system.schedule_appointment()
-        elif choice == '7':
-            system.view_appointments()
-        elif choice == '8':
-            system.delete_patient()
-        elif choice == '0':
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice, please try again.")
+        t = input("Time (YYYY-MM-DD HH:MM): ")
+        # simple validation
+        if len(t) < 10:
+            print("Invalid date format")
+            return
+        
+        # Check overlap
+        for a in self.appts:
+            if a.did == did and a.time == t:
+                print("Doctor is busy then.")
+                return
 
+        reason = input("Reason: ")
+        aid = self.get_new_id("A")
+        self.appts.append(Appt(aid, pid, did, t, reason))
+        self.save()
+        print("Booked.")
+
+    def show_all(self):
+        print("\n--- DATA DUMP ---")
+        print(f"Patients: {len(self.patients)}")
+        for p in self.patients:
+            print(f"{p.id}: {p.name}")
+        
+        print(f"\nDoctors: {len(self.doctors)}")
+        for d in self.doctors:
+            print(f"{d.id}: {d.name} ({d.spec})")
+            
+        print(f"\nAppointments: {len(self.appts)}")
+        for a in self.appts:
+            print(f"{a.time}: {a.pid} with {a.did}")
+
+    def run(self):
+        while True:
+            print("\n1. Add Patient")
+            print("2. Add Doctor")
+            print("3. Book Appt")
+            print("4. Show Data")
+            print("5. Exit")
+            
+            sel = input("Select: ")
+            
+            if sel == "1":
+                self.add_pat()
+            elif sel == "2":
+                self.add_doc()
+            elif sel == "3":
+                self.schedule()
+            elif sel == "4":
+                self.show_all()
+            elif sel == "5":
+                break
+            else:
+                print("Wrong input")
+
+# start
 if __name__ == "__main__":
-    main()
+    sys = ManagementSystem()
+    sys.run()
